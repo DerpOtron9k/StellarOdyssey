@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Stellar Odyssey</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+    <header role="banner">
+      <h1>Stellar Odyssey</h1>
+      <div id="resource-bar"></div>
+    </header>
+    <nav role="navigation">
+      <button data-tab="overview" class="active">Overview</button>
+      <button data-tab="build">Build</button>
+      <button data-tab="research">Research</button>
+      <button data-tab="fleet">Fleet</button>
+      <button data-tab="galaxy">Galaxy</button>
+    </nav>
+    <main role="main" id="main">
+      <div id="overview-panel" class="panel active"><h2>Overview</h2></div>
+      <div id="build-panel" class="panel"><h2>Build</h2><div id="generators"></div><h2>Upgrades</h2><div id="upgrades"></div></div>
+      <div id="research-panel" class="panel"><h2>Research</h2><div id="research"></div></div>
+      <div id="fleet-panel" class="panel"><h2>Fleet</h2><div id="ships"></div><h2>Missions</h2><div id="missions"></div></div>
+      <div id="galaxy-panel" class="panel"><h2>Galaxy</h2><div id="colonies"></div></div>
+    </main>
+    <aside role="complementary" id="log"></aside>
+    <footer role="contentinfo"></footer>
+    <script type="module" src="main.js"></script>
+  </body>
+</html>
