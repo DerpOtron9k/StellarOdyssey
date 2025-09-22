@@ -10,23 +10,25 @@
     <header role="banner">
       <h1>Stellar Odyssey</h1>
       <div id="resource-bar"></div>
+      <div id="prestige-bar"></div>
     </header>
     <nav role="navigation">
       <button data-tab="overview" class="active">Overview</button>
       <button data-tab="build">Build</button>
       <button data-tab="research">Research</button>
       <button data-tab="fleet">Fleet</button>
-      <button data-tab="galaxy">Galaxy</button>
+      <button data-tab="galaxy">Galaxy</button>\n      <button data-tab="settings">Settings</button>
     </nav>
     <main role="main" id="main">
       <div id="overview-panel" class="panel active"><h2>Overview</h2></div>
       <div id="build-panel" class="panel"><h2>Build</h2><div id="generators"></div><h2>Upgrades</h2><div id="upgrades"></div></div>
       <div id="research-panel" class="panel"><h2>Research</h2><div id="research"></div></div>
       <div id="fleet-panel" class="panel"><h2>Fleet</h2><div id="ships"></div><h2>Missions</h2><div id="missions"></div></div>
-      <div id="galaxy-panel" class="panel"><h2>Galaxy</h2><div id="colonies"></div></div>
+      <div id="galaxy-panel" class="panel"><h2>Galaxy</h2><div id="star-map-container"><div id="star-map"></div></div><h2>Colonies</h2><div id="colonies"></div></div>
+      <div id="settings-panel" class="panel"><h2>Settings</h2><button id="notation-toggle">Toggle Notation</button></div>
     </main>
     <aside role="complementary" id="log"></aside>
-    <footer role="contentinfo"></footer>
+    <footer role="contentinfo"><button id="save-button">Save</button><button id="load-button">Load</button><button id="ascend-button">Ascend</button></footer>
     <script type="module" src="main.js"></script>
   </body>
 </html>

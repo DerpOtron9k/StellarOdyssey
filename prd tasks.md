@@ -60,13 +60,12 @@ A browser-based incremental game with active+idle progression. The player expand
 
 ### **4.3 UI/UX**
 
-* Single-page layout with **semantic regions**: header (banner), navigation (tabs), main (core panels), complementary (logs), contentinfo (footer). Use ARIA landmark roles to aid assistive tech navigation. ([MDN Web Docs](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Roles/landmark_role?utm_source=chatgpt.com))
-
-* Tabs/panels: **Overview**, **Build**, **Research**, **Fleet**, **Galaxy**, **Log/Settings**.
-
-* Real-time counters; tooltips show formulas and deltas.
-
-* Keyboard focus order and visible focus states.
+*   The UI will have a dark mode theme with a blue and purple color palette, inspired by `darkmodethemeidea.png`.
+*   The galaxy view will display the `constellation.png` image as a background. Star systems will be overlaid on the image as interactive nodes.
+*   Single-page layout with **semantic regions**: header (banner), navigation (tabs), main (core panels), complementary (logs), contentinfo (footer). Use ARIA landmark roles to aid assistive tech navigation. ([MDN Web Docs](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Roles/landmark_role?utm_source=chatgpt.com))
+*   Tabs/panels: **Overview**, **Build**, **Research**, **Fleet**, **Galaxy**, **Log/Settings**.
+*   Real-time counters; tooltips show formulas and deltas.
+*   Keyboard focus order and visible focus states.
 
 ### **4.4 Save/Load**
 

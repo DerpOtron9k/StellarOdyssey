@@ -21,7 +21,14 @@ const state = {
     research: new Set(),
     ships: [],
     missions: [],
-    colonies: []
+    colonies: [],
+    meta: {
+        ascensions: 0,
+        metaPoints: 0
+    },
+    settings: {
+        notation: 'compact'
+    }
 };
 
 const generators = {
@@ -35,7 +42,8 @@ const research = {
     unlockGeothermal: { name: 'Unlock Geothermal', cost: 10, unlocks: { generators: ['geothermal'] } },
     unlockFusion: { name: 'Unlock Fusion', cost: 100, unlocks: { generators: ['fusion'] } },
     unlockMissions: { name: 'Unlock Missions', cost: 50, unlocks: { missions: true } },
-    unlockColonies: { name: 'Unlock Colonies', cost: 200, unlocks: { colonies: true } }
+    unlockColonies: { name: 'Unlock Colonies', cost: 200, unlocks: { colonies: true } },
+    unlockFTL: { name: 'Unlock FTL', cost: 1000, unlocks: { ftl: true } }
 };
 
 const ships = {
@@ -50,6 +58,11 @@ const missions = {
 
 const colonies = {
     alphaCentauri: { name: 'Alpha Centauri', cost: 10000, production: { energy: 100 } }
+};
+
+const starSystems = {
+    sol: { name: 'Sol', colonies: ['alphaCentauri'], x: 100, y: 200 },
+    proximaCentauri: { name: 'Proxima Centauri', distance: 4.2, colonies: [], x: 250, y: 350 }
 };
 
 const upgrades = {
@@ -67,14 +80,23 @@ const ui = {
         this.renderResearch();
         this.renderShips();
         this.renderMissions();
+        this.renderColonies();
+        this.renderStarMap();
     },
     updateResources() {
         const { energy, materials, science } = state.resources;
         const { eps, mps, sps } = state.rates;
+        const formatNumber = (n) => new Intl.NumberFormat('en-US', { notation: state.settings.notation, maximumFractionDigits: 2 }).format(n);
         document.getElementById('resource-bar').innerHTML = `
-            <span>Energy: ${energy.toFixed(2)} (${eps.toFixed(2)}/s)</span> | 
-            <span>Materials: ${materials.toFixed(2)} (${mps.toFixed(2)}/s)</span> | 
-            <span>Science: ${science.toFixed(2)} (${sps.toFixed(2)}/s)</span>
+            <span>Energy: ${formatNumber(energy)} (${formatNumber(eps)}/s)</span> | 
+            <span>Materials: ${formatNumber(materials)} (${formatNumber(mps)}/s)</span> | 
+            <span>Science: ${formatNumber(science)} (${formatNumber(sps)}/s)</span>
+        `;
+        const prestigePoints = getPrestigePoints();
+        const prestigeBonus = 1 + state.meta.metaPoints * 0.1;
+        document.getElementById('prestige-bar').innerHTML = `
+            <span>Prestige Points on Ascend: ${prestigePoints}</span> | 
+            <span>Current Bonus: x${prestigeBonus.toFixed(2)}</span>
         `;
     },
     initTabs() {
@@ -188,6 +210,44 @@ const ui = {
         if (activeMissions) {
             container.innerHTML += `<h3>Active Missions</h3><ul>${activeMissions}</ul>`;
         }
+    },
+    renderColonies() {
+        const container = document.getElementById('colonies');
+        container.innerHTML = '';
+        if (!state.research.has('unlockColonies')) return;
+        for (const id in colonies) {
+            if (state.colonies.includes(id)) continue;
+            const colony = colonies[id];
+            const el = document.createElement('div');
+            el.innerHTML = `
+                <strong>${colony.name}</strong><br>
+                Cost: ${colony.cost} Materials
+                <button data-colony="${id}">Colonize</button>
+            `;
+            el.querySelector('button').addEventListener('click', () => colonize(id));
+            container.appendChild(el);
+        }
+        const establishedColonies = state.colonies.map(colonyId => {
+            const colony = colonies[colonyId];
+            return `<li>${colony.name} - Production: ${Object.entries(colony.production).map(([key, value]) => `${value} ${key}/s`).join(', ')}</li>`;
+        }).join('');
+        if (establishedColonies) {
+            container.innerHTML += `<h3>Established Colonies</h3><ul>${establishedColonies}</ul>`;
+        }
+    },
+    renderStarMap() {
+        const container = document.getElementById('star-map');
+        container.innerHTML = '';
+        if (!state.research.has('unlockFTL')) return;
+        for (const id in starSystems) {
+            const system = starSystems[id];
+            const el = document.createElement('div');
+            el.className = 'star-system';
+            el.style.left = `${system.x}px`;
+            el.style.top = `${system.y}px`;
+            el.title = system.name;
+            container.appendChild(el);
+        }
     }
 };
 
@@ -206,6 +266,16 @@ function startMission(id) {
     if (state.ships.length > state.missions.length) {
         state.missions.push({ type: id, endTime: Date.now() + mission.duration * 1000 });
         ui.renderMissions();
+    }
+}
+
+function colonize(id) {
+    const colony = colonies[id];
+    if (state.resources.materials >= colony.cost) {
+        state.resources.materials -= colony.cost;
+        state.colonies.push(id);
+        updateRates();
+        ui.renderColonies();
     }
 }
 
@@ -251,6 +321,7 @@ function buyResearch(id) {
 function updateRates() {
     let eps = 0;
     let sps = 0;
+    const prestigeBonus = 1 + state.meta.metaPoints * 0.1;
     for (const id in generators) {
         let multiplier = 1;
         for (const upgradeId of state.upgrades) {
@@ -265,13 +336,22 @@ function updateRates() {
             sps += generators[id].baseProd * state.generators[id] * multiplier;
         }
     }
-    state.rates.eps = eps;
-    state.rates.sps = sps;
+    for (const colonyId of state.colonies) {
+        const colony = colonies[colonyId];
+        if (colony.production.energy) {
+            eps += colony.production.energy;
+        }
+    }
+    state.rates.eps = eps * prestigeBonus;
+    state.rates.sps = sps * prestigeBonus;
 }
 
 function gameLoop() {
     const now = Date.now();
-    const delta = (now - state.tLast) / 1000;
+    let delta = (now - state.tLast) / 1000;
+    if (delta > 3600) {
+        delta = 3600;
+    }
     state.tLast = now;
 
     // Mission completion
@@ -299,9 +379,84 @@ function gameLoop() {
 
 function bootstrap() {
     console.log("Game bootstrapped!");
+    loadGame();
     updateRates();
     ui.init();
     requestAnimationFrame(gameLoop);
+    document.getElementById('ascend-button').addEventListener('click', () => ascend());
+    document.getElementById('save-button').addEventListener('click', () => saveGame());
+    document.getElementById('load-button').addEventListener('click', () => loadGame());
+    document.getElementById('notation-toggle').addEventListener('click', () => {
+        state.settings.notation = state.settings.notation === 'compact' ? 'scientific' : 'compact';
+        ui.updateResources();
+    });
+    setInterval(saveGame, 30000);
+}
+
+function getPrestigePoints() {
+    // A simple formula for prestige points
+    return Math.floor(Math.log10(state.resources.energy + 1));
+}
+
+function ascend() {
+    const prestigePoints = getPrestigePoints();
+    if (prestigePoints > 0) {
+        state.meta.ascensions++;
+        state.meta.metaPoints += prestigePoints;
+        // Reset the game state, but keep meta progress
+        const meta = state.meta;
+        Object.assign(state, {
+            version: 1,
+            tLast: Date.now(),
+            resources: {
+                energy: 10,
+                materials: 100,
+                science: 0,
+            },
+            rates: {
+                eps: 1,
+                mps: 0,
+                sps: 0,
+            },
+            generators: {
+                solar: 0,
+                geothermal: 0,
+                fusion: 0,
+                lab: 0
+            },
+            upgrades: new Set(),
+            research: new Set(),
+            ships: [],
+            missions: [],
+            colonies: [],
+            meta: meta
+        });
+        updateRates();
+        ui.init();
+    }
+}
+
+function saveGame() {
+    const saveState = {
+        ...state,
+        upgrades: Array.from(state.upgrades),
+        research: Array.from(state.research)
+    };
+    localStorage.setItem('stellarOdysseySave', JSON.stringify(saveState));
+    console.log('Game saved!');
+}
+
+function loadGame() {
+    const savedGame = localStorage.getItem('stellarOdysseySave');
+    if (savedGame) {
+        const loadedState = JSON.parse(savedGame);
+        loadedState.upgrades = new Set(loadedState.upgrades);
+        loadedState.research = new Set(loadedState.research);
+        Object.assign(state, loadedState);
+        console.log('Game loaded!');
+        updateRates();
+        ui.init();
+    }
 }
 
 bootstrap();
